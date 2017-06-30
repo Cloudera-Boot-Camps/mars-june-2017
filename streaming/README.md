@@ -75,7 +75,7 @@ hbase(main):002:0>
 
 HBase tables can be utilized for either unstructured data (Key-Value) or structured data (columnar).
 
-## Setting up Flume source to listen on TCP socket
+## Setting up Flume with TCP socket source and HBase sink
 
 ### Flume configuration with regex tokenization of columns
 ```
