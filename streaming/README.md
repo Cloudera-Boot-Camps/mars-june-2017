@@ -217,7 +217,7 @@ public static void main(String[] args) throws Exception {
 
 ---
 
-### Streaming data from Kafka topic into Kudu using Envelope [^](#top)
+### <a name="s4"></a> Streaming data from Kafka topic into Kudu using Envelope [^](#top)
 
 #### Envelope config file 
 
