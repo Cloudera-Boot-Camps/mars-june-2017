@@ -254,6 +254,25 @@ public static void main(String[] args) throws Exception {
 }
 ```
 
+Upload it using `scp` to an edge node and run the following command to submit the job:
+
+```sh
+[ec2-user@ip-172-31-35-239 ~]$ spark-submit gravity-0.1.0.jar \
+> ec2-34-212-203-105.us-west-2.compute.amazonaws.com:9092 \
+> yeah \
+> ip-172-31-37-80.us-west-2.compute.internal:7051 \
+> impala::impala_kudu.mars_spark
+17/06/30 14:54:10 INFO spark.SparkContext: Running Spark version 1.6.0
+;17/06/30 14:54:10 INFO spark.SecurityManager: Changing view acls to: ec2-user
+17/06/30 14:54:10 INFO spark.SecurityManager: Changing modify acls to: ec2-user
+17/06/30 14:54:10 INFO spark.SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users with view permissions: Set(ec2-user); users with modify permissions: Set(ec2-user)
+17/06/30 14:54:11 INFO util.Utils: Successfully started service 'sparkDriver' on port 46632.
+17/06/30 14:54:11 INFO slf4j.Slf4jLogger: Slf4jLogger started
+17/06/30 14:54:11 INFO Remoting: Starting remoting
+
+...
+```
+
 ---
 
 ### <a name="s4"></a> Streaming data from Kafka topic into Kudu using Envelope [^](#top)
