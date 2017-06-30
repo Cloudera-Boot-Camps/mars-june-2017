@@ -253,8 +253,15 @@ public static void main(String[] args) throws Exception {
     ssc.awaitTermination();
 }
 ```
+#### Build jar using Maven
+```sh
+cd <directory containing pom.xml>
+mvn package
+scp targets/<jar file>
+```
 
-Upload it using `scp` to an edge node and run the following command to submit the job:
+
+#### Upload it using `scp` to an edge node and run the following command to submit the job:
 
 ```sh
 [ec2-user@ip-172-31-35-239 ~]$ spark-submit gravity-0.1.0.jar \
