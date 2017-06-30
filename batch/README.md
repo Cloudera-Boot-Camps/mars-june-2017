@@ -97,7 +97,7 @@ FROM
 ```
 
 
-### <center>Phase 3 - Transform for consumption ("presentation" zone)</center>
+### <center>Phase 3 - Transform for consumption ("prod" to "presentation" zone)</center>
 
 #### Filtering and Denormalization Query
 
