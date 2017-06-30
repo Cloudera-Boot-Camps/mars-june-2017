@@ -17,7 +17,7 @@ Mission to Mars
 
 
 
-## <a name="s1"></a> Setting up a pseudo data generator source [Top](#top)
+## <a name="s1"></a> Setting up a pseudo data generator source [^](#top)
 
 The generator simply generates an infinite stream of comma seperated records and writes them to a user defined TCP endpoint.
 
@@ -56,7 +56,7 @@ while (true) {
 }
 ```
 
-## <a name="s2"></a> Forwarding generated data to HBase using Flume [Top](#top)
+## <a name="s2"></a> Forwarding generated data to HBase using Flume [^](#top)
 
 ### Creating a HBase table
 
