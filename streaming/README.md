@@ -87,7 +87,7 @@ Agent1.sinks = hbase-sink
 
 # Describe/configure Source
 Agent1.sources.netcat-source.type = netcat
-#Agent1.sources.netcat-source.bind = ec2-34-212-116-12.us-west-2.compute.amazonaws.com
+#Agent1.sources.netcat-source.bind = ec2-xx-xxx-xxx-xx.us-west-2.compute.amazonaws.com
 Agent1.sources.netcat-source.bind = 0.0.0.0
 Agent1.sources.netcat-source.port = 20170
 
