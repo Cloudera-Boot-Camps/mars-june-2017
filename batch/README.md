@@ -31,16 +31,18 @@ __Optimize the Workflow__
 
 ---
 
+
 ## Solution Outline
 
-### Oozie Workflow 
+### Design Oozie Workflow
 
-#### Combined end-to-end workflow: modular, parallel, scheduled
+#### Overall end-to-end workflow: modular, parallel, scheduled
 
 <center><img src="images/oozie-superflow.PNG"/></center>
 
+---
 
-### <center>Phase 1 - Ingest</center>
+### <center>Details: Phase 1 - Ingest</center>
 
 #### "Dimension" ingestion workflows: parameterized by table name
 
@@ -49,10 +51,11 @@ __Optimize the Workflow__
 
 #### "Fact" ingestion workflow: partitioned by galaxy_id
 
-<center><img src="images/oozie-subflow-fact.PNG"/></center>
+<center><img src="images/oozie-subflow-fact.png"/></center>
 
+---
 
-### <center>Phase 2 - Load from "raw" to "prod" zone</center>
+### <center>Details: Phase 2 - Load from "raw" to "prod" zone</center>
 
 #### Transformation queries
 
@@ -96,8 +99,9 @@ FROM
 
 ```
 
+---
 
-### <center>Phase 3 - Transform for consumption ("prod" to "presentation" zone)</center>
+### <center>Details: Phase 3 - Transform for consumption ("prod" to "presentation" zone)</center>
 
 #### Filtering and Denormalization Query
 
@@ -139,4 +143,51 @@ WHERE
     
 ```
 
+---
+
+### Schedule Oozie Workflow 
+
+<center><img src="images/oozie-workflow-scheduling.PNG"/> </center>
+
+---
+
+### Switch Execution Engine
+
+__`set hive.execution.engine=spark;`__
+```
+DROP TABLE IF EXISTS etl.MARS;
+CREATE TABLE etl.MARS
+AS
+SELECT 
+    m.measurement_id,
+    m.detector_id,
+    d.detector_name,
+    d.country,
+    d.latitude,
+    d.longitude,
+    m.astrophysicist_id,
+    a.astrophysicist_name,
+    a.year_of_birth,
+    a.nationality,
+    m.measurement_time,
+    m.amplitude_1,
+    m.amplitude_2,
+    m.amplitude_3,
+    m.galaxy_id,
+    g.galaxy_name,
+    g.galaxy_type,
+    g.distance_ly,
+    g.absolute_magnitude,
+    g.apparent_magnitude,
+    g.galaxy_group
+FROM 
+    etl.measurements m INNER JOIN
+    etl.detectors d ON m.detector_id=d.detector_id INNER JOIN
+    etl.astrophysicists a ON m.astrophysicist_id=a.astrophysicist_id INNER JOIN
+    etl.galaxies g ON m.galaxy_id=g.galaxy_id
+WHERE
+    m.amplitude_1 > 0.995 AND
+    m.amplitude_3 > 0.995 AND
+    m.amplitude_2 < 0.005 ;
+```
 
