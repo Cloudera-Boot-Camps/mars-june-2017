@@ -160,14 +160,9 @@ public static void main(String[] args) throws Exception {
                     KuduClient client   = new KuduClient.KuduClientBuilder(kuduConnectionArgument).build();
                     KuduSession session = client.newSession();
                     KuduTable table     = client.openTable(kuduTableArgument);
-                    
-                 //   String delimiter = new String(Character.toChars(1));
- 
+
                     while (batchPartitionIterator.hasNext()) {
                         String message = batchPartitionIterator.next()._2();
-                        
-// 						   measurement_id,detector_id,galaxy_id,person_id,measurement_time,amp_1,amp_2,amp_3
-//                          String[] values = message.split(Pattern.quote(delimiter));
                         String[] values = message.split(",");
                         
                         String measurementUuid = values[0];
