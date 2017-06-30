@@ -56,7 +56,9 @@ while (true) {
 }
 ```
 
-## Creating a HBase table
+## <a name="s2"></a> Forwarding generated data to HBase using Flume
+
+### Creating a HBase table
 
 HBase can be configured using the provided shell `hbase shell`. To create a table the command from the Hbase shell (not bash/sh) run:
 ```
@@ -75,9 +77,9 @@ hbase(main):002:0>
 
 HBase tables can be utilized for either unstructured data (Key-Value) or structured data (columnar).
 
-## Setting up Flume with TCP socket source and HBase sink
+### Setting up Flume with TCP socket source and HBase sink
 
-### Flume configuration with regex tokenization of columns
+#### Flume configuration with regex tokenization of columns
 ```
 # Name the components on this agent 
 Agent1.sources = netcat-source  
