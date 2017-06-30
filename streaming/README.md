@@ -73,6 +73,8 @@ hbase(main):001:0> create 'some_table', {NAME => 'a_column_family'}
 hbase(main):002:0> 
 ```
 
+HBase tables can be utilized for either unstructured data (Key-Value) or structured data (columnar).
+
 ## Setting up Flume source to listen on TCP socket
 
 * Debugging tips.
