@@ -115,7 +115,7 @@ Agent1.sinks.hbase-sink.serializer.regex=(.+?),(\\d+),(\\d+),(\\d+),(\\d+),(\\d+
 Agent1.sinks.hbase-sink.serializer.colNames=measurement_id,detector_id,galaxy_id,person_id,measurement_time,amp_1,amp_2,amp_3
 ```
 
-### Substitute existing memory channel in Flume for Kafka instead
+#### Substitute existing memory channel in Flume for Kafka instead
 
 ```
 # Name the components on this agent 
