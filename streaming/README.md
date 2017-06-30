@@ -118,3 +118,178 @@ Agent1.sinks.hbase-sink.serializer.colNames=measurement_id,detector_id,galaxy_id
 ## Substitute existing memory channel in Flume for Kafka instead
 
 ## Utilize Spark Streaming to bridge Kafka with Kudu
+
+
+---
+
+### Streaming data from Kafka topic into Kudu using Envelope [^](#top)
+
+#### Envelope config file 
+
+```
+application {
+    name = Architecture Bootcamp Streaming
+    batch.milliseconds = 5000
+}
+
+steps {
+    traffic {
+        input {
+            type = kafka
+            brokers = "ec2-34-212-203-105.us-west-2.compute.amazonaws.com:9092"
+            topics = yeah
+            encoding = string
+            translator {
+                type = delimited
+                delimiter = ","
+                field.names = [measurement_id,detector_id,galaxy_id,person_id,measurement_time,amp1,amp2,amp3]
+                field.types = [string,int,int,int,long,double,double,double]
+            }
+            window {
+                enabled = true
+                milliseconds = 60000
+            }
+        }
+    }
+    trafficwindow {
+        dependencies = [traffic]
+        deriver {
+            type = sql
+            query.literal = """
+                SELECT
+					*,
+					CASE WHEN amp1 > 0.995 AND amp2 < 0.005 AND amp3 > 0.995 
+						THEN TRUE
+                        ELSE FALSE
+                END isawave
+                FROM traffic"""
+        }
+        planner {
+            type = upsert
+        }
+        output {
+            type = kudu
+            connection = "ec2-52-38-84-189.us-west-2.compute.amazonaws.com:7051"
+            table.name = "impala::impala_kudu.mars_spark_enr"
+        }
+    }
+}
+```
+
+
+#### Install and build Envelope project from __Cloudera-labs__  [^](#top)
+
+```
+[ec2-user@ip-172-31-47-135 ~]$ wget http://download.nextag.com/apache/maven/maven-3/3.5.0/binaries/apache-maven-3.5.0-bin.tar.gz
+[ec2-user@ip-172-31-47-135 ~]$ tar xvf apache-maven-3.5.0-bin.tar.gz
+[ec2-user@ip-172-31-47-135 ~]$ sudo mv apache-maven-3.5.0 /var
+[ec2-user@ip-172-31-47-135 ~]$ sudo chmod -R 755 /var/apache-maven-3.5.0
+[ec2-user@ip-172-31-47-135 ~]$ sudo yum install git
+[ec2-user@ip-172-31-47-135 ~]$ mkdir envelope
+[ec2-user@ip-172-31-47-135 ~]$ cd envelope
+[ec2-user@ip-172-31-47-135 envelope]$ git init
+[ec2-user@ip-172-31-47-135 envelope]$ git clone https://github.com/cloudera-labs/envelope.git
+[ec2-user@ip-172-31-47-135 envelope]$ /var/apache-maven-3.5.0/bin/mvn clean package
+```
+
+#### Run Envelope as Spark applicaiton  [^](#top)
+
+```
+[ec2-user@ip-172-31-47-135 envelope]$ 
+[ec2-user@ip-172-31-47-135 envelope]$ spark-submit envelope/target/envelope-*.jar kudu2mars.conf
+17/06/30 14:37:03 INFO envelope.EnvelopeMain: Envelope application started
+17/06/30 14:37:03 INFO envelope.EnvelopeMain: Configuration loaded
+17/06/30 14:37:03 INFO run.Runner: Starting getting steps
+17/06/30 14:37:03 INFO run.Runner: Adding batch step: trafficwindow
+17/06/30 14:37:03 INFO run.Runner: With configuration: Config(SimpleConfigObject({"dependencies":["traffic"],"planner":{"type":"upsert"},"output":{"connection":"ec2-52-38-84-189.us-west-2.compute.amazonaws.com:7051","table":{"name":"impala::impala_kudu.mars_spark_enr"},"type":"kudu"},"deriver":{"query":{"literal":"\n                SELECT \n\t\t*,\n\t\tCASE WHEN amp1 > 0.995 AND amp2 < 0.005 AND amp3 > 0.995 THEN TRUE\n\t\t\tELSE FALSE\n\t\tEND isawave\n\t\tFROM traffic"},"type":"sql"}}))
+17/06/30 14:37:03 INFO run.Runner: Adding streaming step: traffic
+17/06/30 14:37:03 INFO run.Runner: With configuration: Config(SimpleConfigObject({"input":{"topics":"yeah","window":{"enabled":true,"milliseconds":60000},"translator":{"field":{"names":["measurement_id","detector_id","galaxy_id","person_id","measurement_time","amp1","amp2","amp3"],"types":["string","int","int","int","long","double","double","double"]},"delimiter":",","type":"delimited"},"encoding":"string","type":"kafka","brokers":"ec2-34-212-203-105.us-west-2.compute.amazonaws.com:9092"}}))
+17/06/30 14:37:03 INFO run.Runner: Finished getting steps
+17/06/30 14:37:03 INFO run.Runner: Steps instatiated
+17/06/30 14:37:03 INFO run.Runner: Streaming step(s) identified
+17/06/30 14:37:03 INFO run.Runner: Independent steps are:
+17/06/30 14:37:03 INFO run.Runner: Started batch for steps:
+17/06/30 14:37:03 INFO run.Runner: Finished batch for steps:
+17/06/30 14:37:03 INFO run.Runner: Streaming steps are: traffic
+17/06/30 14:37:03 INFO run.Runner: Setting up streaming step: traffic
+17/06/30 14:37:04 INFO spark.SparkContext: Running Spark version 1.6.0
+17/06/30 14:37:04 INFO spark.SecurityManager: Changing view acls to: ec2-user
+17/06/30 14:37:04 INFO spark.SecurityManager: Changing modify acls to: ec2-user
+17/06/30 14:37:04 INFO spark.SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users with view permissions: Set(ec2-user); users with modify permissions: Set(ec2-user)
+17/06/30 14:37:04 INFO util.Utils: Successfully started service 'sparkDriver' on port 40781.
+17/06/30 14:37:05 INFO slf4j.Slf4jLogger: Slf4jLogger started
+17/06/30 14:37:05 INFO Remoting: Starting remoting
+17/06/30 14:37:05 INFO Remoting: Remoting started; listening on addresses :[akka.tcp://sparkDriverActorSystem@172.31.47.135:41082]
+17/06/30 14:37:05 INFO Remoting: Remoting now listens on addresses: [akka.tcp://sparkDriverActorSystem@172.31.47.135:41082]
+17/06/30 14:37:05 INFO util.Utils: Successfully started service 'sparkDriverActorSystem' on port 41082.
+17/06/30 14:37:05 INFO spark.SparkEnv: Registering MapOutputTracker
+17/06/30 14:37:05 INFO spark.SparkEnv: Registering BlockManagerMaster
+17/06/30 14:37:05 INFO storage.DiskBlockManager: Created local directory at /tmp/blockmgr-c8e09d78-d6a8-4567-8307-664a12b412f5
+17/06/30 14:37:05 INFO storage.MemoryStore: MemoryStore started with capacity 530.3 MB
+17/06/30 14:37:05 INFO spark.SparkEnv: Registering OutputCommitCoordinator
+17/06/30 14:37:05 INFO util.Utils: Successfully started service 'SparkUI' on port 4040.
+17/06/30 14:37:05 INFO ui.SparkUI: Started SparkUI at http://172.31.47.135:4040
+17/06/30 14:37:05 INFO spark.SparkContext: Added JAR file:/home/ec2-user/envelope/envelope/target/envelope-0.3.0.jar at spark://172.31.47.135:40781/jars/envelope-0.3.0.jar with timestamp 1498847825996
+17/06/30 14:37:06 INFO client.RMProxy: Connecting to ResourceManager at ip-172-31-47-135.us-west-2.compute.internal/172.31.47.135:8032
+17/06/30 14:37:06 INFO yarn.Client: Requesting a new application from cluster with 3 NodeManagers
+17/06/30 14:37:06 INFO yarn.Client: Verifying our application has not requested more than the maximum memory capability of the cluster (5336 MB per container)
+17/06/30 14:37:06 INFO yarn.Client: Will allocate AM container, with 896 MB memory including 384 MB overhead
+17/06/30 14:37:06 INFO yarn.Client: Setting up container launch context for our AM
+17/06/30 14:37:06 INFO yarn.Client: Setting up the launch environment for our AM container
+17/06/30 14:37:06 INFO yarn.Client: Preparing resources for our AM container
+17/06/30 14:37:07 INFO yarn.Client: Uploading resource file:/tmp/spark-83910d8d-ff7f-40ac-a914-3af4cb023f16/__spark_conf__5280266056101106745.zip -> hdfs://ip-172-31-47-135.us-west-2.compute.internal:8020/user/ec2-user/.sparkStaging/application_1498777759638_0011/__spark_conf__5280266056101106745.zip
+17/06/30 14:37:07 INFO spark.SecurityManager: Changing view acls to: ec2-user
+17/06/30 14:37:07 INFO spark.SecurityManager: Changing modify acls to: ec2-user
+17/06/30 14:37:07 INFO spark.SecurityManager: SecurityManager: authentication disabled; ui acls disabled; users with view permissions: Set(ec2-user); users with modify permissions: Set(ec2-user)
+17/06/30 14:37:07 INFO yarn.Client: Submitting application 11 to ResourceManager
+17/06/30 14:37:07 INFO impl.YarnClientImpl: Submitted application application_1498777759638_0011
+17/06/30 14:37:08 INFO yarn.Client: Application report for application_1498777759638_0011 (state: ACCEPTED)
+17/06/30 14:37:08 INFO yarn.Client:
+         client token: N/A
+         diagnostics: N/A
+         ApplicationMaster host: N/A
+         ApplicationMaster RPC port: -1
+         queue: root.users.ec2-user
+         start time: 1498847827541
+         final status: UNDEFINED
+         tracking URL: http://ip-172-31-47-135.us-west-2.compute.internal:8088/proxy/application_1498777759638_0011/
+         user: ec2-user
+17/06/30 14:37:09 INFO yarn.Client: Application report for application_1498777759638_0011 (state: ACCEPTED)
+. . . . 
+ . . . . 
+17/06/30 14:37:17 INFO kafka.DirectKafkaInputDStream: Slide time = 5000 ms
+17/06/30 14:37:17 INFO kafka.DirectKafkaInputDStream: Storage level = StorageLevel(false, false, false, false, 1)
+17/06/30 14:37:17 INFO kafka.DirectKafkaInputDStream: Checkpoint interval = null
+17/06/30 14:37:17 INFO kafka.DirectKafkaInputDStream: Remember duration = 65000 ms
+17/06/30 14:37:17 INFO kafka.DirectKafkaInputDStream: Initialized and validated org.apache.spark.streaming.kafka.DirectKafkaInputDStream@7288cea1
+17/06/30 14:37:17 INFO dstream.FlatMappedDStream: Slide time = 5000 ms
+17/06/30 14:37:17 INFO dstream.FlatMappedDStream: Storage level = StorageLevel(false, true, false, false, 1)
+17/06/30 14:37:17 INFO dstream.FlatMappedDStream: Checkpoint interval = null
+17/06/30 14:37:17 INFO dstream.FlatMappedDStream: Remember duration = 65000 ms
+17/06/30 14:37:17 INFO dstream.FlatMappedDStream: Initialized and validated org.apache.spark.streaming.dstream.FlatMappedDStream@13d89e6c
+17/06/30 14:37:17 INFO dstream.WindowedDStream: Slide time = 5000 ms
+17/06/30 14:37:17 INFO dstream.WindowedDStream: Storage level = StorageLevel(false, false, false, false, 1)
+17/06/30 14:37:17 INFO dstream.WindowedDStream: Checkpoint interval = null
+17/06/30 14:37:17 INFO dstream.WindowedDStream: Remember duration = 5000 ms
+17/06/30 14:37:17 INFO dstream.WindowedDStream: Initialized and validated org.apache.spark.streaming.dstream.WindowedDStream@56231e00
+17/06/30 14:37:17 INFO dstream.ForEachDStream: Slide time = 5000 ms
+17/06/30 14:37:17 INFO dstream.ForEachDStream: Storage level = StorageLevel(false, false, false, false, 1)
+17/06/30 14:37:17 INFO dstream.ForEachDStream: Checkpoint interval = null
+17/06/30 14:37:17 INFO dstream.ForEachDStream: Remember duration = 5000 ms
+17/06/30 14:37:17 INFO dstream.ForEachDStream: Initialized and validated org.apache.spark.streaming.dstream.ForEachDStream@1b86be2e
+17/06/30 14:37:17 INFO util.RecurringTimer: Started timer for JobGenerator at time 1498847840000
+17/06/30 14:37:17 INFO scheduler.JobGenerator: Started JobGenerator at 1498847840000 ms
+17/06/30 14:37:17 INFO scheduler.JobScheduler: Started JobScheduler
+17/06/30 14:37:17 INFO streaming.StreamingContext: StreamingContext started
+17/06/30 14:37:17 INFO run.Runner: Streaming context started
+17/06/30 14:37:20 INFO dstream.FlatMappedDStream: Slicing from 1498847785000 ms to 1498847840000 ms (aligned to 1498847785000 ms and 1498847840000 ms)
+17/06/30 14:37:20 INFO dstream.FlatMappedDStream: Time 1498847835000 ms is invalid as zeroTime is 1498847835000 ms and slideDuration is 5000 ms and difference is 0 ms
+17/06/30 14:37:20 INFO utils.VerifiableProperties: Verifying properties
+17/06/30 14:37:20 INFO utils.VerifiableProperties: Property group.id is overridden to
+17/06/30 14:37:20 INFO utils.VerifiableProperties: Property zookeeper.connect is overridden to
+17/06/30 14:37:20 INFO scheduler.JobScheduler: Added jobs for time 1498847840000 ms
+17/06/30 14:37:20 INFO scheduler.JobScheduler: Starting job streaming job 1498847840000 ms.0 from job set of time 1498847840000 ms
+17/06/30 14:37:20 INFO run.Runner: Immediate dependent steps of traffic are: trafficwindow
+
+
+```
