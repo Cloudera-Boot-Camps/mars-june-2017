@@ -119,6 +119,106 @@ Agent1.sinks.hbase-sink.serializer.colNames=measurement_id,detector_id,galaxy_id
 
 ## Utilize Spark Streaming to bridge Kafka with Kudu
 
+```java
+@SuppressWarnings("serial")
+public static void main(String[] args) throws Exception {
+    final String brokersArgument        = args[0];
+    final String topicsArgument         = args[1];
+    final String kuduConnectionArgument = args[2];
+    final String kuduTableArgument      = args[3];
+    
+    SparkConf sparkConf = new SparkConf();
+    
+    sparkConf.setMaster("local[*]");
+    sparkConf.setAppName("KafkaKuduStreamApp");
+    
+    JavaSparkContext     sc  = new JavaSparkContext(sparkConf);
+    JavaStreamingContext ssc = new JavaStreamingContext(sc, new Duration(5000));
+    
+    Map<String, String> params = Maps.newHashMap();
+    params.put("metadata.broker.list", brokersArgument);
+    Set<String> topics = Sets.newHashSet(topicsArgument);
+    
+    // Create direct kafka stream with brokers and topics
+    JavaPairDStream<String, String> dstream = KafkaUtils.createDirectStream(
+    		ssc, 
+    		String.class, 
+    		String.class, 
+    		StringDecoder.class, 
+    		StringDecoder.class, 
+    		params, 
+    		topics
+    	);
+    
+    dstream.foreachRDD(new Function<JavaPairRDD<String, String>, Void>() {
+        @Override
+        public Void call(JavaPairRDD<String, String> batch) throws Exception {
+            batch.foreachPartition(new VoidFunction<Iterator<Tuple2<String, String>>>() {
+                @Override
+                public void call(Iterator<Tuple2<String, String>> batchPartitionIterator) throws Exception {
+                	
+                    KuduClient client   = new KuduClient.KuduClientBuilder(kuduConnectionArgument).build();
+                    KuduSession session = client.newSession();
+                    KuduTable table     = client.openTable(kuduTableArgument);
+                    
+                 //   String delimiter = new String(Character.toChars(1));
+ 
+                    while (batchPartitionIterator.hasNext()) {
+                        String message = batchPartitionIterator.next()._2();
+                        
+// 						   measurement_id,detector_id,galaxy_id,person_id,measurement_time,amp_1,amp_2,amp_3
+//                          String[] values = message.split(Pattern.quote(delimiter));
+                        String[] values = message.split(",");
+                        
+                        String measurementUuid = values[0];
+                        long   measurementTime = Long.parseLong(values[4]);
+                        
+                        int detectorId = Integer.parseInt(values[1]);
+                        int galaxyId   = Integer.parseInt(values[2]);
+                        int personId   = Integer.parseInt(values[3]);
+                        
+                        double amp1 = Double.parseDouble(values[2]);
+                        double amp2 = Double.parseDouble(values[3]);
+                        double amp3 = Double.parseDouble(values[4]);
+                       
+                        
+                        Insert insert = table.newInsert();
+                        PartialRow insertRow = insert.getRow();
+                        
+                        
+                        boolean isWave = (amp1 > 0.995 && amp3 > 0.995 && amp2 < 0.005);
+               
+                        insertRow.addString("measurement_id", measurementUuid);
+                        insertRow.addLong("measurement_time", measurementTime);
+                    
+                        insertRow.addInt("detector_id", detectorId);
+                        insertRow.addInt("galaxy_id",   galaxyId);
+                        insertRow.addInt("person_id",   personId);
+                        
+                        insertRow.addDouble("amp1", amp1);
+                        insertRow.addDouble("amp2", amp2);
+                        insertRow.addDouble("amp3", amp3);
+                        
+                        insertRow.addBoolean("is_wave", isWave);
+                        
+                        session.apply(insert);
+                    }
+                    
+                    session.flush();
+                    
+                    session.close();
+                    client.shutdown();
+                }
+            });
+            
+            return null;
+        } 
+    });
+    
+    ssc.start();
+    ssc.awaitTermination();
+}
+```
 
 ---
 
