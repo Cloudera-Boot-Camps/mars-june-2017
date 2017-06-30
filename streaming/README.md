@@ -4,20 +4,20 @@ Mission to Mars
 
 # Exercise
 
-1. Run measurements stream using the provided data generator
+1. [Run measurements stream using the provided data generator](#s1)
 
-2. Build a `generator -> Flume -> HBase` pipeline
+2. [Build a `generator -> Flume -> HBase` pipeline](#s2)
     * Then switch out HBase for HDFS
 
-3. Build a `generator -> Flume -> Kafka -> Spark Streaming -> HBase` pipeline
+3. [Build a `generator -> Flume -> Kafka -> Spark Streaming -> HBase` pipeline](#s3)
     * Then switch out HBase for Kudu
 
-4. First use built-in Spark-Kudu API, then use Envelope
+4. [First use built-in Spark-Kudu API, then use Envelope](#s4)
     * Then switch out Kudu for Solr
 
 
 
-## Setting up a pseudo data generator source
+## <a name="s1"></a> Setting up a pseudo data generator source
 
 The generator simply generates an infinite stream of comma seperated records and writes them to a user defined TCP endpoint.
 
@@ -55,3 +55,10 @@ while (true) {
     System.out.println(measurement);
 }
 ```
+
+## Setting up Flume to listen on TCP socket and ingest streaming data
+
+* Flume configuration.
+* HBase configuration.
+* Debugging tips.
+
