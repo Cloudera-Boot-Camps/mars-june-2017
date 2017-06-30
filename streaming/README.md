@@ -77,5 +77,39 @@ HBase tables can be utilized for either unstructured data (Key-Value) or structu
 
 ## Setting up Flume source to listen on TCP socket
 
-* Debugging tips.
+### Flume configuration with regex tokenization of columns
+```
+# Name the components on this agent 
+Agent1.sources = netcat-source  
+Agent1.channels = memory-channel
+#Agent1.sinks = logger-sink,hbase-sink
+Agent1.sinks = hbase-sink
+
+# Describe/configure Source
+Agent1.sources.netcat-source.type = netcat
+#Agent1.sources.netcat-source.bind = ec2-34-212-116-12.us-west-2.compute.amazonaws.com
+Agent1.sources.netcat-source.bind = 0.0.0.0
+Agent1.sources.netcat-source.port = 20170
+
+# Describe the sink
+#Agent1.sinks.logger-sink.type = logger
+Agent1.sinks.hbase-sink.type= hbase
+
+# Use a channel which buffers events in memory
+Agent1.channels.memory-channel.type = memory
+Agent1.channels.memory-channel.capacity = 100000
+Agent1.channels.memory-channel.transactionCapacity = 100
+
+# Bind the source and sink to the channel
+Agent1.sources.netcat-source.channels = memory-channel
+#Agent1.sinks.logger-sink.channel = memory-channel
+
+Agent1.sinks.hbase-sink.channel = memory-channel
+Agent1.sinks.hbase-sink.table = measurements
+Agent1.sinks.hbase-sink.columnFamily = structured
+
+Agent1.sinks.hbase-sink.serializer=org.apache.flume.sink.hbase.RegexHbaseEventSerializer
+Agent1.sinks.hbase-sink.serializer.regex=(.+?),(\\d+),(\\d+),(\\d+),(\\d+),(\\d+\\.\\d+),(\\d+\\.\\d+),(\\d+\\.\\d+)
+Agent1.sinks.hbase-sink.serializer.colNames=measurement_id,detector_id,galaxy_id,person_id,measurement_time,amp_1,amp_2,amp_3
+```
 
