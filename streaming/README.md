@@ -56,9 +56,9 @@ while (true) {
 }
 ```
 
-## Setting up Flume to listen on TCP socket and ingest streaming data
+## Creating a HBase table
 
-* Flume configuration.
-* HBase configuration.
+## Setting up Flume source to listen on TCP socket
+
 * Debugging tips.
 
