@@ -117,7 +117,7 @@ Agent1.sinks.hbase-sink.serializer.colNames=measurement_id,detector_id,galaxy_id
 
 ## Substitute existing memory channel in Flume for Kafka instead
 
-## Utilize Spark Streaming to bridge Kafka with Kudu
+## <a name="s3"></a> Utilize Spark Streaming to bridge Kafka with Kudu [^](#top)
 
 ```java
 @SuppressWarnings("serial")
