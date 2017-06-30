@@ -117,6 +117,45 @@ Agent1.sinks.hbase-sink.serializer.colNames=measurement_id,detector_id,galaxy_id
 
 ## Substitute existing memory channel in Flume for Kafka instead
 
+```
+# Name the components on this agent 
+Agent1.sources = netcat-source  
+Agent1.channels = kafka-channel
+#Agent1.sinks = logger-sink,hbase-sink
+Agent1.sinks = hbase-sink
+
+# Describe/configure Source
+Agent1.sources.netcat-source.type = netcat
+#Agent1.sources.netcat-source.bind = ec2-34-212-116-12.us-west-2.compute.amazonaws.com
+Agent1.sources.netcat-source.bind = 0.0.0.0
+Agent1.sources.netcat-source.port = 20170
+
+# Describe the sink
+#Agent1.sinks.logger-sink.type = logger
+Agent1.sinks.hbase-sink.type= hbase
+
+# Use a channel which buffers events in memory
+Agent1.channels.kafka-channel.type = org.apache.flume.channel.kafka.KafkaChannel
+Agent1.channels.kafka-channel.capacity = 10000
+Agent1.channels.kafka-channel.zookeeperConnect = ec2-34-212-116-12.us-west-2.compute.amazonaws.com:2181
+Agent1.channels.kafka-channel.parseAsFlumeEvent = false
+Agent1.channels.kafka-channel.topic = yeah
+Agent1.channels.kafka-channel.consumer.group.id = channel2-grp
+Agent1.channels.kafka-channel.auto.offset.reset = earliest
+#Agent1.channels.kafka-channel.bootstrap.servers = ec2-34-212-203-105.us-west-2.compute.amazonaws.com:9092
+Agent1.channels.kafka-channel.brokerList = ec2-34-212-203-105.us-west-2.compute.amazonaws.com:9092
+Agent1.channels.kafka-channel.transactionCapacity = 1000
+Agent1.channels.kafka-channel.kafka.consumer.max.partition.fetch.bytes=209715
+
+# Bind the source and sink to the channel
+Agent1.sources.netcat-source.channels = kafka-channel
+#Agent1.sinks.logger-sink.channel = memory-channel
+
+Agent1.sinks.hbase-sink.channel = kafka-channel
+Agent1.sinks.hbase-sink.table = measurements
+Agent1.sinks.hbase-sink.columnFamily = structured
+```
+
 ## <a name="s3"></a> Utilize Spark Streaming to bridge Kafka with Kudu [^](#top)
 
 ```java
