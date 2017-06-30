@@ -2,7 +2,7 @@
 Mission to Mars
 
 
-# Exercise
+# <a name="top"></a> Exercise
 
 1. [Run measurements stream using the provided data generator](#s1)
 
@@ -17,7 +17,7 @@ Mission to Mars
 
 
 
-## <a name="s1"></a> Setting up a pseudo data generator source
+## <a name="s1"></a> Setting up a pseudo data generator source [Top](#top)
 
 The generator simply generates an infinite stream of comma seperated records and writes them to a user defined TCP endpoint.
 
@@ -56,7 +56,7 @@ while (true) {
 }
 ```
 
-## <a name="s2"></a> Forwarding generated data to HBase using Flume
+## <a name="s2"></a> Forwarding generated data to HBase using Flume [Top](#top)
 
 ### Creating a HBase table
 
