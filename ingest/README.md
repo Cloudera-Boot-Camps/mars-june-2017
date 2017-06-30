@@ -81,8 +81,9 @@ The below view does both:
 
    - Provide pre-aggregated results
 
-Filtered recrods ("wave" only) are materialized into presentation level table for further analysis:
-<center><img src="images/impala-materialized-view.PNG"/></center>
+      Filtered records ("wave" only) are materialized into presentation level table for further analysis:
+ 
+ <center><img src="images/impala-materialized-view.PNG"/></center>
 
    - Convert DOUBLEs to DECIMALs
 
