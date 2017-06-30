@@ -58,6 +58,21 @@ while (true) {
 
 ## Creating a HBase table
 
+HBase can be configured using the provided shell `hbase shell`. To create a table the command from the Hbase shell (not bash/sh) run:
+```
+[ec2-user@ip-xxx-xx-xx-xxx ~]$ hbase shell
+17/06/30 12:48:08 INFO Configuration.deprecation: hadoop.native.lib is deprecated. Instead, use io.native.lib.available
+HBase Shell; enter 'help<RETURN>' for list of supported commands.
+Type "exit<RETURN>" to leave the HBase Shell
+Version 1.2.0-cdh5.11.1, rUnknown, Thu Jun  1 10:19:43 PDT 2017
+
+hbase(main):001:0> create 'some_table', {NAME => 'a_column_family'}
+0 row(s) in 1.7200 seconds
+
+=> Hbase::Table - some_table
+hbase(main):002:0> 
+```
+
 ## Setting up Flume source to listen on TCP socket
 
 * Debugging tips.
